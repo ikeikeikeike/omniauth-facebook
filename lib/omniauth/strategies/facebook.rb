@@ -54,13 +54,17 @@ module OmniAuth
       end
 
       def raw_info
-        @raw_info ||= access_token.get('/me').parsed || {}
+        if @raw_info.nil?
+          @raw_info = access_token.get('/me').parsed || {}
+          @raw_info = access_token.get("/me?locale=#{@raw_info['locale'] || I18n.locale.to_s}").parsed || {}
+        end
+        @raw_info
       end
 
       def build_access_token
         if access_token = request.params["access_token"]
           ::OAuth2::AccessToken.from_hash(
-            client, 
+            client,
             {"access_token" => access_token}.update(access_token_options)
           )
         elsif signed_request_contains_access_token?
